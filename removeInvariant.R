@@ -19,7 +19,7 @@ removeInvariant<-function(fastafile,indexfile=NULL,prefix="output",missing=c("?"
   } else {
     pos<-read.table(indexfile,header = T)
   }
-  nucs<-c("A","C","G","T")
+  nucs<-c("A","C","G","T","a","c","g","t")
   invariant<-numeric()
   for (i in 1:length(fasta[[1]])){
     nucls<-unique(as.character(sapply(fasta, "[[", i)))
