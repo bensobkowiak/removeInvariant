@@ -15,9 +15,9 @@ removeInvariant<-function(fastafile,indexfile=NULL,prefix="output",missing=c("?"
   fasta<-read.fasta(fastafile,forceDNAtolower = F)
   fastnames<-names(fasta)
   if (is.null(indexfile)){
-    pos<-data.frame(Position = 1:length(fasta[[1]]))
+    pos<-1:length(fasta[[1]])
   } else {
-    pos<-read.table(indexfile,header = T)
+    pos<-read.table(indexfile,header = T)[,1]
   }
   nucs<-c("A","C","G","T","a","c","g","t")
   invariant<-numeric()
@@ -33,7 +33,7 @@ removeInvariant<-function(fastafile,indexfile=NULL,prefix="output",missing=c("?"
   }
   if (length(invariant)>0){
     fasta<-lapply(1:length(fasta), function(x){fasta[[x]][-invariant]})
-    pos<-pos[-invariant,]
+    pos<-pos[-invariant]
   }
   if (excessAmbPerc>0){
     remove<-numeric()
@@ -48,7 +48,9 @@ removeInvariant<-function(fastafile,indexfile=NULL,prefix="output",missing=c("?"
       pos<-pos[-remove,]
     }
   }
-  write.fasta(newfasta,fastnames,paste0(prefix,".fasta"),open = "w")
+  pos<-data.frame(SNP=1:length(pos),Position=pos)
+  write.fasta(fasta,fastnames,paste0(prefix,".fasta"),open = "w")
   write.table(pos,paste0(prefix,"_index.txt"),quote=F,row.names=F)
 }
+
 
