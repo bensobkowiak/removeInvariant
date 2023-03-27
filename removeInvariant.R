@@ -1,6 +1,6 @@
 #' Remove invariant sites and excess ambiguity from FASTA file
 #' @param fastafile Sequence file in FASTA format
-#' @param indexfile Positions of SNPs in .txt file, single column with header (optional)
+#' @param indexfile Positions of SNPs in .txt file, two columns with header (snp number in first column, position in reference in second) (optional)
 #' @param prefix Output file prefix
 #' @param missing Code for missing sites (default = ? and -)
 #' @param keepAmb If TRUE, include ambiguity as variant code, otherwise just consider A, C, G, T (default = FALSE)
@@ -17,7 +17,7 @@ removeInvariant<-function(fastafile,indexfile=NULL,prefix="output",missing=c("?"
   if (is.null(indexfile)){
     pos<-1:length(fasta[[1]])
   } else {
-    pos<-read.table(indexfile,header = T)[,1]
+    pos<-read.table(indexfile,header = T)[,2]
   }
   nucs<-c("A","C","G","T","a","c","g","t")
   invariant<-numeric()
