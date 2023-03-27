@@ -45,7 +45,7 @@ removeInvariant<-function(fastafile,indexfile=NULL,prefix="output",missing=c("?"
     }
     if (length(remove)>0){
       fasta<-lapply(1:length(fasta), function(x){fasta[[x]][-remove]})
-      pos<-pos[-remove,]
+      pos<-pos[-remove]
     }
   }
   pos<-data.frame(SNP=1:length(pos),Position=pos)
