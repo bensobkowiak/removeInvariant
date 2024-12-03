@@ -1,5 +1,6 @@
 #' Remove invariant sites and excess ambiguity from FASTA file
 #' @param fastafile Sequence file in FASTA format
+#' @param keepNames if not NULL, file name in .txt of samples to keep
 #' @param indexfile Positions of SNPs in .txt file, two columns with header (snp number in first column, position in reference in second) (optional)
 #' @param prefix Output file prefix
 #' @param missing Code for missing sites (default = ? and -)
@@ -9,27 +10,37 @@
 #' @export
 
 
-removeInvariant<-function(fastafile,indexfile=NULL,prefix="output",missing=c("?","-"),keepAmb=FALSE,excessAmbPerc=10){
+removeInvariant<-function(fastafile,keepNames=NULL,indexfile=NULL,prefix="output",
+                          missing=c("?","-"),keepAmb=FALSE,excessAmbPerc=10){
   require(seqinr)
-  options(stringsAsFactors = F)
-  fasta<-read.fasta(fastafile,forceDNAtolower = F)
+  
+  fasta<-seqinr::read.fasta(fastafile,forceDNAtolower = F)
   fastnames<-names(fasta)
+  
+  if (!is.null(keepNames)){
+    if (any(grepl(".txt",keepNames))){
+      names2keep<-read.table(keepNames,header = F)[,1]
+    } else {
+      names2keep<-keepNames
+    }
+    fastnames<-names(fasta)[which(names(fasta) %in% names2keep)]
+    fasta<-fasta[names(fasta) %in% names2keep]
+  }
   if (is.null(indexfile)){
     pos<-1:length(fasta[[1]])
   } else {
     pos<-read.table(indexfile,header = T)[,2]
   }
-  nucs<-c("A","C","G","T","a","c","g","t")
   invariant<-numeric()
   for (i in 1:length(fasta[[1]])){
-    nucls<-unique(as.character(sapply(fasta, "[[", i)))
-    nucls<-nucls[!nucls %in% missing]
-    if(!keepAmb){
-      nucls<-nucls[nucls %in% nucs]
-    }
-    if(length(nucls)<2){
-      invariant<-c(invariant,i)
-    }
+   nucls<-unique(as.character(sapply(fasta, "[[", i)))
+   nucls<-nucls[!nucls %in% missing]
+   if(!keepAmb){
+     nucls<-nucls[!nucls %in% missing]
+   }
+   if(length(nucls)<2){
+     invariant<-c(invariant,i)
+   }
   }
   if (length(invariant)>0){
     fasta<-lapply(1:length(fasta), function(x){fasta[[x]][-invariant]})
@@ -38,19 +49,20 @@ removeInvariant<-function(fastafile,indexfile=NULL,prefix="output",missing=c("?"
   if (excessAmbPerc>0){
     remove<-numeric()
     for (i in 1:length(fasta[[1]])){
-      sites<-as.character(unlist(lapply(fasta, "[[", i)))
-      if (length(which(sites == "N" | sites == "?"))>length(fasta)*(excessAmbPerc/100)){
-        remove<-c(remove,i)
-      }
+     sites<-as.character(unlist(lapply(fasta, "[[", i)))
+     if (length(which(sites == "N" | sites == "?"))>length(fasta)*(excessAmbPerc/100)){
+       remove<-c(remove,i)
+     }
     }
     if (length(remove)>0){
-      fasta<-lapply(1:length(fasta), function(x){fasta[[x]][-remove]})
-      pos<-pos[-remove]
+     fasta<-lapply(1:length(fasta), function(x){fasta[[x]][-remove]})
+     pos<-pos[-remove]
     }
   }
   pos<-data.frame(SNP=1:length(pos),Position=pos)
-  write.fasta(fasta,fastnames,paste0(prefix,".fasta"),open = "w")
+  seqinr::write.fasta(fasta,fastnames,paste0(prefix,".fasta"),nbchar = nrow(pos),open = "w")
   write.table(pos,paste0(prefix,"_index.txt"),quote=F,row.names=F)
 }
+
 
 
